@@ -41,7 +41,7 @@ export function detectHeadings(html: string): DetectedHeading[] {
 
   while ((match = htmlHeadingRegex.exec(html)) !== null) {
     const level = parseInt(match[1], 10);
-    const text = stripTags(match[2]).trim();
+    const text = stripTags(match[2]).replace(/\s*\n\s*/g, ' ').trim();
     if (text) {
       headings.push({
         text,
@@ -56,7 +56,7 @@ export function detectHeadings(html: string): DetectedHeading[] {
   // 2. Detect in paragraph content
   const paragraphRegex = /<p[^>]*>(.*?)<\/p>/gi;
   while ((match = paragraphRegex.exec(html)) !== null) {
-    const text = stripTags(match[1]).trim();
+    const text = stripTags(match[1]).replace(/\s*\n\s*/g, ' ').trim();
     if (!text || text.length > 200) continue;
 
     position = match.index;

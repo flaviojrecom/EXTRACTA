@@ -58,16 +58,17 @@ export class Normalizer implements IPipelineStage<string, string> {
     // Match word-hyphen at end of line followed by continuation on next line
     // Only inside text content (not inside tags)
     // Pattern: "word-\n  continuation" → "wordcontinuation"
-    return html.replace(/(\w)-\s*\n\s*(\w)/g, '$1$2');
+    return html.replace(/([\p{L}])-\s*\n\s*([\p{L}])/gu, '$1$2');
   }
 
   private removeArtificialLineBreaks(html: string): string {
     // Inside <p> tags, join lines that appear to be mid-sentence breaks
-    // A mid-sentence break: lowercase letter + \n + lowercase/uppercase letter (not a tag)
+    // Handles accented characters (ç, ã, é, etc.) and uppercase letters
     return html.replace(
       /(<p[^>]*>)([\s\S]*?)(<\/p>)/gi,
       (_match, open: string, content: string, close: string) => {
-        const cleaned = content.replace(/([a-z,;])\s*\n\s*([a-zA-Z])/g, '$1 $2');
+        // Join any letter (including Unicode/accented) followed by newline and another letter
+        const cleaned = content.replace(/([\p{L},;.!?:)])\s*\n\s*([\p{L}(])/gu, '$1 $2');
         return `${open}${cleaned}${close}`;
       },
     );

@@ -6,11 +6,15 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "extracta": "dist/cli/index.js"
+    "extracta": "dist/index.js"
   },
   "scripts": {
     "build": "tsup",
+    "build:cli": "tsup",
+    "build:web": "next build web",
     "dev": "tsx src/cli/index.ts",
+    "dev:web": "next dev web",
+    "start:web": "next start web",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -33,11 +37,19 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "cheerio": "^1.0.0-rc.12",
     "commander": "^13.1.0",
     "js-tiktoken": "^1.0.21",
     "jszip": "^3.10.1",
-    "pdf-parse": "^1.1.1"
+    "next": "^15.5.12",
+    "pdf-parse": "^1.1.1",
+    "postcss": "^8.5.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

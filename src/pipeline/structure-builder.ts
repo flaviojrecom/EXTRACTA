@@ -59,7 +59,7 @@ export class StructureBuilder implements IPipelineStage<string, StructuredDocume
       ];
     }
 
-    const $ = cheerio.load(html, { xml: true });
+    const $ = cheerio.load(html, { decodeEntities: true });
     const root = $.html() || html;
 
     // Split content by heading positions

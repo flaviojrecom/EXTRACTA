@@ -1,8 +1,11 @@
 import * as cheerio from 'cheerio';
 
 export function htmlToMarkdown(html: string): string {
-  const $ = cheerio.load(html, { xml: true });
-  return convertNode($, $.root()).trim();
+  const $ = cheerio.load(html, { decodeEntities: true });
+  let result = convertNode($, $.root()).trim();
+  // Restore any remaining <br> markers not yet converted
+  result = result.replace(/\u0000BR\u0000/g, '\n');
+  return result;
 }
 
 function convertNode($: cheerio.CheerioAPI, node: cheerio.Cheerio<cheerio.AnyNode>): string {
@@ -10,7 +13,8 @@ function convertNode($: cheerio.CheerioAPI, node: cheerio.Cheerio<cheerio.AnyNod
 
   node.contents().each((_, child) => {
     if (child.type === 'text') {
-      result += (child as unknown as { data: string }).data || '';
+      const raw = (child as unknown as { data: string }).data || '';
+      result += raw;
       return;
     }
 
@@ -28,17 +32,21 @@ function convertNode($: cheerio.CheerioAPI, node: cheerio.Cheerio<cheerio.AnyNod
       case 'h6': {
         const level = parseInt(tag[1], 10);
         const prefix = '#'.repeat(level);
-        const text = el.text().trim();
+        const text = el.text().replace(/\s*\n\s*/g, ' ').trim();
         result += `\n${prefix} ${text}\n\n`;
         break;
       }
       case 'p': {
-        const text = convertNode($, el).trim();
+        let text = convertNode($, el);
+        // Remove artificial line breaks but preserve explicit <br> markers
+        text = text.replace(/\s*\n\s*/g, ' ').trim();
+        // Restore <br> as real newlines
+        text = text.replace(/\u0000BR\u0000/g, '\n');
         if (text) result += `${text}\n\n`;
         break;
       }
       case 'br':
-        result += '\n';
+        result += '\u0000BR\u0000';
         break;
       case 'hr':
         result += '\n---\n\n';
@@ -56,7 +64,7 @@ function convertNode($: cheerio.CheerioAPI, node: cheerio.Cheerio<cheerio.AnyNod
         break;
       }
       case 'a': {
-        const text = el.text().trim();
+        const text = el.text().replace(/\s*\n\s*/g, ' ').trim();
         const href = el.attr('href') || '';
         result += href ? `[${text}](${href})` : text;
         break;
