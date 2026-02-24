@@ -1,5 +1,0 @@
-{
-  "/api/download/[sessionId]/[filename]/route": "app/api/download/[sessionId]/[filename]/route.js",
-  "/api/process/route": "app/api/process/route.js",
-  "/page": "app/page.js"
-}
