@@ -1,3 +1,10 @@
+export const config = {
+  api: { bodyParser: false },
+};
+
+// Allow large file uploads (scanned PDFs can be 100MB+)
+export const maxDuration = 300; // 5 minutes
+
 import { writeFileSync, mkdirSync, unlinkSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -14,7 +21,7 @@ const PRESET_DEFAULTS: Record<string, { cleaningLevel: CleaningLevel; formats: E
 };
 
 const SUPPORTED_EXTENSIONS = ['.pdf', '.epub', '.txt'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 export async function POST(req: Request) {
   const formData = await req.formData();
@@ -27,7 +34,7 @@ export async function POST(req: Request) {
     return Response.json({ error: 'No file provided' }, { status: 400 });
   }
   if (file.size > MAX_FILE_SIZE) {
-    return Response.json({ error: 'File too large (max 50MB)' }, { status: 400 });
+    return Response.json({ error: 'File too large (max 500MB)' }, { status: 400 });
   }
   const ext = extname(file.name).toLowerCase();
   if (!SUPPORTED_EXTENSIONS.includes(ext)) {

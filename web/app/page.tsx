@@ -26,13 +26,15 @@ const T: Record<Lang, Record<string, string>> = {
     subtitle: 'Transform documents into AI-ready knowledge',
     dropHere: 'Drag & drop your document here',
     dropHint: 'or click to browse files',
-    dropFormats: 'Supports PDF, EPUB, TXT — max 50MB',
+    dropFormats: 'Supports PDF, EPUB, TXT — max 500MB',
     dropReplace: 'Click or drop to replace',
     presetHint: 'Select a processing mode — each adjusts cleaning, chunking, and output format',
     process: 'Process Document',
     processing: 'Processing...',
     pipeline: 'Running extraction pipeline...',
     connFail: 'Connection failed. Is the server running?',
+    ocrTitle: 'OCR — Scanning pages',
+    ocrEstimate: 'Est. remaining:',
     qualityScore: 'Quality Score',
     chunks: 'Chunks',
     sections: 'Sections',
@@ -65,6 +67,7 @@ const T: Record<Lang, Record<string, string>> = {
     pipelineSettings: 'Pipeline Settings',
     stageAnalyze: 'Analyzing file',
     stageExtract: 'Extracting content',
+    stageOcrFix: 'OCR correction',
     stageNormalize: 'Normalizing text',
     stageClean: 'Cleaning noise',
     stageStructure: 'Building structure',
@@ -77,13 +80,15 @@ const T: Record<Lang, Record<string, string>> = {
     subtitle: 'Transforme documentos em conhecimento pronto para IA',
     dropHere: 'Arraste e solte seu documento aqui',
     dropHint: 'ou clique para selecionar',
-    dropFormats: 'Suporta PDF, EPUB, TXT — máx 50MB',
+    dropFormats: 'Suporta PDF, EPUB, TXT — máx 500MB',
     dropReplace: 'Clique ou solte para substituir',
     presetHint: 'Selecione um modo de processamento — cada um ajusta limpeza, chunking e formato de saída',
     process: 'Processar Documento',
     processing: 'Processando...',
     pipeline: 'Executando pipeline de extração...',
     connFail: 'Falha na conexão. O servidor está rodando?',
+    ocrTitle: 'OCR — Escaneando páginas',
+    ocrEstimate: 'Tempo restante est.:',
     qualityScore: 'Qualidade',
     chunks: 'Chunks',
     sections: 'Seções',
@@ -116,6 +121,7 @@ const T: Record<Lang, Record<string, string>> = {
     pipelineSettings: 'Configurações do Pipeline',
     stageAnalyze: 'Analisando arquivo',
     stageExtract: 'Extraindo conteúdo',
+    stageOcrFix: 'Correção OCR',
     stageNormalize: 'Normalizando texto',
     stageClean: 'Limpando ruído',
     stageStructure: 'Construindo estrutura',
@@ -128,6 +134,7 @@ const T: Record<Lang, Record<string, string>> = {
 const STAGE_KEYS: Record<string, string> = {
   analyze: 'stageAnalyze',
   extract: 'stageExtract',
+  'ocr-fix': 'stageOcrFix',
   normalize: 'stageNormalize',
   clean: 'stageClean',
   structure: 'stageStructure',
@@ -216,9 +223,9 @@ function FlagButton({ lang, active, onClick }: { lang: 'pt' | 'en'; active: bool
   return (
     <button
       onClick={onClick}
-      className={`w-9 h-9 rounded-full overflow-hidden transition-all duration-200 ${
+      className={`w-6 h-6 rounded-full overflow-hidden transition-all duration-200 ${
         active
-          ? 'ring-2 ring-blue-500 ring-offset-2 ring-offset-zinc-950 scale-105'
+          ? 'ring-1 ring-blue-500 ring-offset-1 ring-offset-zinc-950 scale-105'
           : 'opacity-40 hover:opacity-70 grayscale hover:grayscale-0'
       }`}
       title={lang === 'pt' ? 'Português do Brasil' : 'English'}
@@ -286,8 +293,9 @@ export default function Home() {
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [result, setResult] = useState<ProcessResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ocr, setOcr] = useState<{ page: number; total: number; startedAt: number; pageTimestamps: number[] } | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  const [lang, setLang] = useState<Lang>('en');
+  const [lang, setLang] = useState<Lang>('pt');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const t = T[lang];
@@ -315,6 +323,7 @@ export default function Home() {
     setError(null);
     setResult(null);
     setProgress(null);
+    setOcr(null);
 
     try {
       const formData = new FormData();
@@ -355,6 +364,21 @@ export default function Home() {
             const data = JSON.parse(line.slice(6));
             if (eventType === 'progress') {
               setProgress(data);
+              // Track OCR page progress for time estimation
+              if (data.message) {
+                const ocrMatch = data.message.match(/OCR page (\d+)\/(\d+)/);
+                if (ocrMatch) {
+                  const page = parseInt(ocrMatch[1]);
+                  const total = parseInt(ocrMatch[2]);
+                  setOcr(prev => {
+                    const now = Date.now();
+                    const timestamps = prev?.pageTimestamps ?? [];
+                    return { page, total, startedAt: prev?.startedAt ?? now, pageTimestamps: [...timestamps, now] };
+                  });
+                } else if (data.stage !== 'extract') {
+                  setOcr(null);
+                }
+              }
             } else if (eventType === 'result') {
               setResult(data);
             } else if (eventType === 'error') {
@@ -368,6 +392,7 @@ export default function Home() {
     } finally {
       setProcessing(false);
       setProgress(null);
+      setOcr(null);
     }
   };
 
@@ -484,27 +509,30 @@ export default function Home() {
       {processing && (
         <div className="mb-6 p-5 rounded-xl glass">
           {/* Stage indicators */}
-          <div className="flex items-center justify-between mb-4">
-            {['analyze', 'extract', 'normalize', 'clean', 'structure', 'chunk', 'export'].map((stage, i) => {
+          <div className="flex items-start justify-between mb-4">
+            {['analyze', 'extract', 'ocr-fix', 'normalize', 'clean', 'structure', 'chunk', 'export'].map((stage, i) => {
               const step = i + 1;
               const currentStep = progress?.step || 0;
               const isDone = currentStep > step;
               const isActive = currentStep === step;
               const stageKey = STAGE_KEYS[stage] || stage;
+
               return (
                 <div key={stage} className="flex flex-col items-center gap-1.5 flex-1">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
-                    isDone
-                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                      : isActive
-                        ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50 animate-pulse'
-                        : 'bg-zinc-800/50 text-zinc-600 border border-zinc-800'
-                  }`}>
-                    {isDone ? (
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
-                        <path d="M3 8.5l3.5 3.5 6.5-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : step}
+                  <div className="relative">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 ${
+                      isDone
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : isActive
+                          ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50 animate-pulse'
+                          : 'bg-zinc-800/50 text-zinc-600 border border-zinc-800'
+                    }`}>
+                      {isDone ? (
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                          <path d="M3 8.5l3.5 3.5 6.5-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      ) : step}
+                    </div>
                   </div>
                   <span className={`text-[9px] leading-tight text-center transition-colors ${
                     isDone ? 'text-emerald-500/70' : isActive ? 'text-blue-400' : 'text-zinc-700'
@@ -530,6 +558,51 @@ export default function Home() {
           )}
         </div>
       )}
+
+      {/* ── OCR Progress Box ── */}
+      {ocr && ocr.total > 0 && processing && (() => {
+        const percent = Math.round((ocr.page / ocr.total) * 100);
+        const timestamps = ocr.pageTimestamps;
+        let eta = '';
+        if (timestamps.length >= 2) {
+          const avgMs = (timestamps[timestamps.length - 1] - timestamps[0]) / (timestamps.length - 1);
+          const remaining = (ocr.total - ocr.page) * avgMs;
+          const secs = Math.ceil(remaining / 1000);
+          if (secs < 60) eta = `~${secs}s`;
+          else if (secs < 3600) eta = `~${Math.ceil(secs / 60)}min`;
+          else eta = `~${Math.floor(secs / 3600)}h ${Math.ceil((secs % 3600) / 60)}min`;
+        }
+        return (
+          <div className="mb-6 p-4 rounded-xl glass border border-blue-500/20">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-medium text-blue-400 flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none">
+                  <rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M4 7h8M4 9.5h5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
+                </svg>
+                {t.ocrTitle}
+              </span>
+              <span className="text-sm font-bold text-blue-300 tabular-nums">{percent}%</span>
+            </div>
+            <div className="h-2 bg-zinc-800/80 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-300 ease-out"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-[10px] text-zinc-600 tabular-nums">
+                {lang === 'pt' ? 'Página' : 'Page'} {ocr.page} / {ocr.total}
+              </span>
+              {eta && (
+                <span className="text-[10px] text-zinc-500 tabular-nums">
+                  {t.ocrEstimate} {eta}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Error ── */}
       {error && (

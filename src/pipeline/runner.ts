@@ -15,6 +15,7 @@ import { PdfOcrExtractor } from '../extractors/pdf-ocr.js';
 import { Normalizer } from './normalizer.js';
 import { Cleaner, type CleanerResult, type CleaningLevel } from './cleaner.js';
 import { StructureBuilder } from './structure-builder.js';
+import { postProcessOcrText } from './ocr-post-processor.js';
 
 export interface OcrPipelineOptions {
   enabled: boolean;
@@ -85,14 +86,14 @@ export class PipelineRunner {
   }
 
   async run(filePath: string, onProgress?: ProgressCallback): Promise<PipelineResult> {
-    const totalSteps = 7;
     const log = onProgress ?? (this.config.verbose
       ? (stage: string, _step: number, _total: number, msg?: string) =>
           console.log(`[pipeline] ${stage}${msg ? ': ' + msg : ''}`)
       : undefined);
 
     // 1. Analyze
-    log?.('analyze', 1, totalSteps, `File: ${filePath}`);
+    const T = 8; // total steps (including OCR post-process)
+    log?.('analyze', 1, T, `File: ${filePath}`);
     const ext = extname(filePath).toLowerCase();
     const buffer = readFileSync(filePath);
 
@@ -101,23 +102,31 @@ export class PipelineRunner {
     const hash = cache ? FileCache.hashContent(buffer) : '';
 
     // 2. Extract (with OCR fallback for scanned PDFs)
-    log?.('extract', 2, totalSteps, `Format: ${ext}`);
+    log?.('extract', 2, T, `Format: ${ext}`);
     const extractor = this.extractorRegistry.getExtractor(ext, buffer);
     const fileMetadata = { fileName: basename(filePath), extension: ext, sizeBytes: buffer.length };
     const extraction = await this.extractorRegistry.extractWithFallback(
       extractor,
       buffer,
       fileMetadata,
-      log ? (page, total) => log('extract', 2, totalSteps, `OCR page ${page}/${total}`) : undefined,
+      log ? (page, total) => log('extract', 2, T, `OCR page ${page}/${total}`) : undefined,
     );
 
-    // 3. Normalize
-    log?.('normalize', 3, totalSteps);
+    // 3. OCR Post-Process (only for scanned documents)
+    log?.('ocr-fix', 3, T, extraction.metadata.isScanned ? 'Correcting OCR errors' : 'Skipped (not scanned)');
+    if (extraction.metadata.isScanned) {
+      const postResult = postProcessOcrText(extraction.html);
+      extraction.html = postResult.text;
+      log?.('ocr-fix', 3, T, `${postResult.totalCorrections} corrections (L1: ${postResult.layer1Corrections}, L2: ${postResult.layer2Corrections})`);
+    }
+
+    // 4. Normalize
+    log?.('normalize', 4, T);
     let normalizedHtml: string;
 
     const cached = cache?.get(hash);
     if (cached) {
-      log?.('normalize', 3, totalSteps, 'Using cached result');
+      log?.('normalize', 4, T, 'Using cached result');
       normalizedHtml = cached.html;
     } else {
       normalizedHtml = await this.normalizer.process(extraction.html, {
@@ -125,8 +134,8 @@ export class PipelineRunner {
       });
     }
 
-    // 4. Clean
-    log?.('clean', 4, totalSteps, `Level: ${this.config.cleaningLevel}`);
+    // 5. Clean
+    log?.('clean', 5, T, `Level: ${this.config.cleaningLevel}`);
     const cleanerResult = await this.cleaner.process(normalizedHtml, {
       verbose: this.config.verbose,
     });
@@ -136,27 +145,27 @@ export class PipelineRunner {
       cache.set(hash, { html: normalizedHtml, metadata: extraction.metadata as unknown as Record<string, unknown> });
     }
 
-    // 5. Structure
-    log?.('structure', 5, totalSteps);
+    // 6. Structure
+    log?.('structure', 6, T);
     const structureBuilder = new StructureBuilder(extraction.metadata);
     const document = await structureBuilder.process(cleanerResult.html, {
       verbose: this.config.verbose,
     });
-    log?.('structure', 5, totalSteps, `Sections: ${document.sections.length}`);
+    log?.('structure', 6, T, `Sections: ${document.sections.length}`);
 
-    // 6. Chunk
-    log?.('chunk', 6, totalSteps);
+    // 7. Chunk
+    log?.('chunk', 7, T);
     const chunker = new SmartChunker(this.config.chunkOptions);
     const chunks = await chunker.process(document, {
       verbose: this.config.verbose,
     });
-    log?.('chunk', 6, totalSteps, `${chunks.length} chunks`);
+    log?.('chunk', 7, T, `${chunks.length} chunks`);
 
     // Quality score
     const qualityScore = computeQualityScore(document, chunks, this.config.chunkOptions);
 
-    // 7. Export
-    log?.('export', 7, totalSteps, `Formats: ${this.config.exportFormats.join(', ')}`);
+    // 8. Export
+    log?.('export', 8, T, `Formats: ${this.config.exportFormats.join(', ')}`);
     const exportResults: ExportResult[] = [];
     const outputDir = this.config.outputDir || './output';
     const includeMetadata = this.config.preset !== 'fine-tuning';

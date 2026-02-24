@@ -5,7 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['pdf-parse', 'js-tiktoken'],
+  serverExternalPackages: ['pdf-parse', 'js-tiktoken', 'tesseract.js', 'canvas', 'pdfjs-dist'],
   webpack: (config) => {
     config.resolve.alias['@extracta'] = resolve(__dirname, '../src');
     // Allow .js imports to resolve to .ts files (Node ESM convention used in src/)

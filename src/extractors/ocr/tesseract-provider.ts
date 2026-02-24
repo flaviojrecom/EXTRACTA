@@ -1,5 +1,23 @@
 import { createWorker, type Worker } from 'tesseract.js';
+import { join, dirname } from 'node:path';
+import { existsSync } from 'node:fs';
 import type { OcrProvider, OcrConfig, OcrPageResult } from './types.js';
+
+function resolveWorkerPath(): string {
+  // Walk up from node_modules/tesseract.js to find the worker script
+  try {
+    // Try common locations
+    const candidates = [
+      join(process.cwd(), 'node_modules', 'tesseract.js', 'src', 'worker-script', 'node', 'index.js'),
+      join(dirname(require.resolve('tesseract.js')), 'src', 'worker-script', 'node', 'index.js'),
+    ];
+    for (const p of candidates) {
+      if (existsSync(p)) return p;
+    }
+  } catch { /* fallthrough */ }
+  // Absolute fallback using process.cwd
+  return join(process.cwd(), 'node_modules', 'tesseract.js', 'src', 'worker-script', 'node', 'index.js');
+}
 
 export class TesseractOcrProvider implements OcrProvider {
   name = 'tesseract';
@@ -10,9 +28,13 @@ export class TesseractOcrProvider implements OcrProvider {
   async initialize(config: OcrConfig): Promise<void> {
     this.config = config;
     const count = Math.max(1, config.concurrency);
+    const workerPath = resolveWorkerPath();
 
     for (let i = 0; i < count; i++) {
-      const worker = await createWorker(config.language);
+      const worker = await createWorker(config.language, undefined, {
+        workerBlobURL: false,
+        workerPath,
+      });
       this.workers.push(worker);
     }
   }

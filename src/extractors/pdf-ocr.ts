@@ -96,21 +96,16 @@ export class PdfOcrExtractor implements IExtractor {
   ): Promise<(OcrPageResult | null)[]> {
     const results: (OcrPageResult | null)[] = [];
 
-    // Process in batches based on concurrency (workers handle distribution)
-    const settled = await Promise.allSettled(
-      pages.map((page) => {
-        this.onProgress?.(page.pageNumber, pages.length);
-        return this.provider.recognizePage(page.imageBuffer, page.pageNumber);
-      }),
-    );
-
-    for (const result of settled) {
-      if (result.status === 'fulfilled') {
-        results.push(result.value);
-        warnings.push(...result.value.warnings);
-      } else {
+    // Process pages sequentially so progress callbacks are meaningful
+    for (const page of pages) {
+      this.onProgress?.(page.pageNumber, pages.length);
+      try {
+        const result = await this.provider.recognizePage(page.imageBuffer, page.pageNumber);
+        results.push(result);
+        warnings.push(...result.warnings);
+      } catch (err) {
         results.push(null);
-        warnings.push(`OCR failed for a page: ${result.reason}`);
+        warnings.push(`OCR failed for page ${page.pageNumber}: ${err}`);
       }
     }
 
