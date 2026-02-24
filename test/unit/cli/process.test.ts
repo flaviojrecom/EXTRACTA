@@ -29,13 +29,13 @@ describe('CLI process command', () => {
     expect(presetOption!.defaultValue).toBe('rag');
   });
 
-  it('should accept --format option with default md', () => {
+  it('should accept --format option (default from preset)', () => {
     const program = createTestProgram();
     const processCmd = program.commands.find((cmd) => cmd.name() === 'process')!;
 
     const formatOption = processCmd.options.find((opt) => opt.long === '--format');
     expect(formatOption).toBeDefined();
-    expect(formatOption!.defaultValue).toBe('md');
+    // No static default — format defaults are derived from preset at runtime
   });
 
   it('should accept --output option with default ./output', () => {

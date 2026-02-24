@@ -1,9 +1,15 @@
 import { readFileSync } from 'node:fs';
-import { extname, basename } from 'node:path';
+import { extname, basename, dirname } from 'node:path';
 import type { Chunk, ChunkOptions } from '../chunker/types.js';
 import { SmartChunker } from '../chunker/chunker.js';
+import { FileCache } from '../cache/file-cache.js';
 import type { StructuredDocument } from '../core/document.js';
-import type { ExportFormat, Preset } from '../exporters/types.js';
+import type { ExportFormat, ExportResult, Preset } from '../exporters/types.js';
+import { MarkdownExporter } from '../exporters/markdown.js';
+import { JsonExporter } from '../exporters/json.js';
+import { JsonlExporter } from '../exporters/jsonl.js';
+import { PlainTextExporter } from '../exporters/plain-text.js';
+import { computeQualityScore, type QualityBreakdown } from '../quality/scorer.js';
 import { ExtractorRegistry } from '../extractors/registry.js';
 import { Normalizer } from './normalizer.js';
 import { Cleaner, type CleanerResult, type CleaningLevel } from './cleaner.js';
@@ -16,14 +22,26 @@ export interface PipelineConfig {
   preset: Preset;
   cache: boolean;
   verbose: boolean;
+  outputDir?: string;
 }
 
 export interface PipelineResult {
   html: string;
   document: StructuredDocument;
   chunks: Chunk[];
+  exportResults: ExportResult[];
+  qualityScore: QualityBreakdown;
   cleanerAuditLog: CleanerResult['auditLog'];
 }
+
+const EXPORTERS = {
+  md: new MarkdownExporter(),
+  json: new JsonExporter(),
+  jsonl: new JsonlExporter(),
+  txt: new PlainTextExporter(),
+};
+
+export type ProgressCallback = (stage: string, step: number, total: number, message?: string) => void;
 
 export class PipelineRunner {
   private readonly config: PipelineConfig;
@@ -38,62 +56,100 @@ export class PipelineRunner {
     this.cleaner = new Cleaner(config.cleaningLevel);
   }
 
-  async run(filePath: string): Promise<PipelineResult> {
-    const log = this.config.verbose
-      ? (stage: string, msg?: string) => console.log(`[pipeline] ${stage}${msg ? ': ' + msg : ''}`)
-      : undefined;
+  async run(filePath: string, onProgress?: ProgressCallback): Promise<PipelineResult> {
+    const totalSteps = 7;
+    const log = onProgress ?? (this.config.verbose
+      ? (stage: string, _step: number, _total: number, msg?: string) =>
+          console.log(`[pipeline] ${stage}${msg ? ': ' + msg : ''}`)
+      : undefined);
 
-    // Analyze
-    log?.('analyze', `File: ${filePath}`);
+    // 1. Analyze
+    log?.('analyze', 1, totalSteps, `File: ${filePath}`);
     const ext = extname(filePath).toLowerCase();
     const buffer = readFileSync(filePath);
 
-    // Extract
-    log?.('extract', `Format: ${ext}`);
+    // Check cache
+    const cache = this.config.cache ? new FileCache(dirname(filePath)) : null;
+    const hash = cache ? FileCache.hashContent(buffer) : '';
+
+    // 2. Extract
+    log?.('extract', 2, totalSteps, `Format: ${ext}`);
     const extractor = this.extractorRegistry.getExtractor(ext, buffer);
     const extraction = await extractor.extract(buffer, {
       fileName: basename(filePath),
       extension: ext,
       sizeBytes: buffer.length,
     });
-    log?.('extract', `Pages: ${extraction.metadata.pageCount ?? 'N/A'}, Warnings: ${extraction.warnings.length}`);
 
-    // Normalize
-    log?.('normalize');
-    const normalizedHtml = await this.normalizer.process(extraction.html, {
-      verbose: this.config.verbose,
-    });
+    // 3. Normalize
+    log?.('normalize', 3, totalSteps);
+    let normalizedHtml: string;
 
-    // Clean
-    log?.('clean', `Level: ${this.config.cleaningLevel}`);
+    const cached = cache?.get(hash);
+    if (cached) {
+      log?.('normalize', 3, totalSteps, 'Using cached result');
+      normalizedHtml = cached.html;
+    } else {
+      normalizedHtml = await this.normalizer.process(extraction.html, {
+        verbose: this.config.verbose,
+      });
+    }
+
+    // 4. Clean
+    log?.('clean', 4, totalSteps, `Level: ${this.config.cleaningLevel}`);
     const cleanerResult = await this.cleaner.process(normalizedHtml, {
       verbose: this.config.verbose,
     });
-    log?.('clean', `Removals: ${cleanerResult.auditLog.length}`);
 
-    // Structure
-    log?.('structure');
+    // Cache after extraction+normalization (most expensive steps)
+    if (cache && !cached) {
+      cache.set(hash, { html: normalizedHtml, metadata: extraction.metadata as unknown as Record<string, unknown> });
+    }
+
+    // 5. Structure
+    log?.('structure', 5, totalSteps);
     const structureBuilder = new StructureBuilder(extraction.metadata);
     const document = await structureBuilder.process(cleanerResult.html, {
       verbose: this.config.verbose,
     });
-    log?.('structure', `Sections: ${document.sections.length}, Language: ${document.metadata.language ?? 'unknown'}`);
+    log?.('structure', 5, totalSteps, `Sections: ${document.sections.length}`);
 
-    // Chunk
-    log?.('chunk');
+    // 6. Chunk
+    log?.('chunk', 6, totalSteps);
     const chunker = new SmartChunker(this.config.chunkOptions);
     const chunks = await chunker.process(document, {
       verbose: this.config.verbose,
     });
-    log?.('chunk', `${chunks.length} chunks created`);
+    log?.('chunk', 6, totalSteps, `${chunks.length} chunks`);
 
-    // Export — stub for future story
-    log?.('export', '(stub)');
+    // Quality score
+    const qualityScore = computeQualityScore(document, chunks, this.config.chunkOptions);
+
+    // 7. Export
+    log?.('export', 7, totalSteps, `Formats: ${this.config.exportFormats.join(', ')}`);
+    const exportResults: ExportResult[] = [];
+    const outputDir = this.config.outputDir || './output';
+    const includeMetadata = this.config.preset !== 'fine-tuning';
+
+    for (const format of this.config.exportFormats) {
+      const exporter = EXPORTERS[format];
+      if (exporter) {
+        const result = await exporter.export(document, chunks, {
+          outputDir,
+          preset: this.config.preset,
+          includeMetadata,
+        });
+        result.qualityScore = qualityScore.overall;
+        exportResults.push(result);
+      }
+    }
 
     return {
       html: cleanerResult.html,
       document,
       chunks,
+      exportResults,
+      qualityScore,
       cleanerAuditLog: cleanerResult.auditLog,
     };
   }
