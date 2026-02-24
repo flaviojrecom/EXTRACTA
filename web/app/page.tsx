@@ -26,7 +26,7 @@ const T: Record<Lang, Record<string, string>> = {
     subtitle: 'Transform documents into AI-ready knowledge',
     dropHere: 'Drag & drop your document here',
     dropHint: 'or click to browse files',
-    dropFormats: 'Supports PDF, EPUB, TXT — max 500MB',
+    dropFormats: 'Supports PDF, EPUB, MOBI, AZW, RTF, HTML, TXT — max 500MB',
     dropReplace: 'Click or drop to replace',
     presetHint: 'Select a processing mode — each adjusts cleaning, chunking, and output format',
     process: 'Process Document',
@@ -80,7 +80,7 @@ const T: Record<Lang, Record<string, string>> = {
     subtitle: 'Transforme documentos em conhecimento pronto para IA',
     dropHere: 'Arraste e solte seu documento aqui',
     dropHint: 'ou clique para selecionar',
-    dropFormats: 'Suporta PDF, EPUB, TXT — máx 500MB',
+    dropFormats: 'Suporta PDF, EPUB, MOBI, AZW, RTF, HTML, TXT — máx 500MB',
     dropReplace: 'Clique ou solte para substituir',
     presetHint: 'Selecione um modo de processamento — cada um ajusta limpeza, chunking e formato de saída',
     process: 'Processar Documento',
@@ -431,7 +431,7 @@ export default function Home() {
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.epub,.txt"
+          accept=".pdf,.epub,.txt,.html,.htm,.rtf,.mobi,.azw,.azw3"
           className="hidden"
           onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
         />
@@ -455,7 +455,7 @@ export default function Home() {
 
       {/* ── Preset Selector ── */}
       <div className="mb-6">
-        <p className="text-[11px] text-zinc-600 mb-3 text-center tracking-wide">{t.presetHint}</p>
+        <p className="text-[11px] text-blue-400/70 mb-3 text-center tracking-wide">{t.presetHint}</p>
         <div className="grid grid-cols-3 gap-3">
           {(Object.entries(presetInfo) as [Preset, typeof presetInfo.rag][]).map(([key, info]) => (
             <button

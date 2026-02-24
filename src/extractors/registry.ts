@@ -3,6 +3,9 @@ import type { IExtractor, ExtractionResult, FileMetadata } from './types.js';
 import { PdfTextExtractor } from './pdf-text.js';
 import { EpubExtractor } from './epub.js';
 import { TxtExtractor } from './txt.js';
+import { HtmlExtractor } from './html.js';
+import { RtfExtractor } from './rtf.js';
+import { MobiExtractor } from './mobi.js';
 import { PdfOcrExtractor, type OcrProgressCallback } from './pdf-ocr.js';
 
 export class ExtractorRegistry {
@@ -17,10 +20,16 @@ export class ExtractorRegistry {
     const pdf = new PdfTextExtractor();
     const epub = new EpubExtractor();
     const txt = new TxtExtractor();
+    const html = new HtmlExtractor();
+    const rtf = new RtfExtractor();
+    const mobi = new MobiExtractor();
 
     for (const ext of pdf.supportedExtensions) this.extractors.set(ext, pdf);
     for (const ext of epub.supportedExtensions) this.extractors.set(ext, epub);
     for (const ext of txt.supportedExtensions) this.extractors.set(ext, txt);
+    for (const ext of html.supportedExtensions) this.extractors.set(ext, html);
+    for (const ext of rtf.supportedExtensions) this.extractors.set(ext, rtf);
+    for (const ext of mobi.supportedExtensions) this.extractors.set(ext, mobi);
 
     if (ocrEnabled) {
       const pdfOcr = new PdfOcrExtractor();

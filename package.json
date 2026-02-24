@@ -22,7 +22,9 @@
     "lint:fix": "eslint src/ test/ --fix",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\""
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "web": "next dev web -p 3000",
+    "extracta": "node dist/index.js"
   },
   "keywords": [
     "extracta",

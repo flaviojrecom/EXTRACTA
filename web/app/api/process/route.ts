@@ -20,7 +20,7 @@ const PRESET_DEFAULTS: Record<string, { cleaningLevel: CleaningLevel; formats: E
   'fine-tuning': { cleaningLevel: 'aggressive', formats: ['jsonl'] },
 };
 
-const SUPPORTED_EXTENSIONS = ['.pdf', '.epub', '.txt'];
+const SUPPORTED_EXTENSIONS = ['.pdf', '.epub', '.txt', '.html', '.htm', '.rtf', '.mobi', '.azw', '.azw3'];
 const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 
 export async function POST(req: Request) {

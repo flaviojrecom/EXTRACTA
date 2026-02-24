@@ -5,7 +5,7 @@ import { PipelineRunner } from '../../pipeline/runner.js';
 import type { PipelineConfig, ProgressCallback } from '../../pipeline/runner.js';
 import type { Preset, ExportFormat } from '../../exporters/types.js';
 
-const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.epub', '.txt']);
+const SUPPORTED_EXTENSIONS = new Set(['.pdf', '.epub', '.txt', '.html', '.htm', '.rtf', '.mobi', '.azw', '.azw3']);
 
 const PRESET_DEFAULTS: Record<Preset, { cleaningLevel: PipelineConfig['cleaningLevel']; formats: ExportFormat[] }> = {
   'knowledge-base': { cleaningLevel: 'light', formats: ['md'] },
