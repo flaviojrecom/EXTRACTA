@@ -1,0 +1,7 @@
+This is the first paragraph of a sample document.
+It contains multiple lines.
+
+This is the second paragraph.
+It also spans multiple lines with different content.
+
+Third paragraph here. Short and simple.

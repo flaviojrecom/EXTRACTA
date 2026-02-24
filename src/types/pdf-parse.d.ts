@@ -1,0 +1,13 @@
+declare module 'pdf-parse/lib/pdf-parse.js' {
+  interface PdfData {
+    numpages: number;
+    numrender: number;
+    info: Record<string, string> | null;
+    metadata: unknown;
+    text: string;
+    version: string;
+  }
+
+  function pdfParse(dataBuffer: Buffer): Promise<PdfData>;
+  export = pdfParse;
+}
