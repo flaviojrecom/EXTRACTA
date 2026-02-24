@@ -74,4 +74,30 @@ describe('CLI process command', () => {
     const cacheOption = processCmd.options.find((opt) => opt.long === '--no-cache');
     expect(cacheOption).toBeDefined();
   });
+
+  it('should have --no-ocr flag', () => {
+    const program = createTestProgram();
+    const processCmd = program.commands.find((cmd) => cmd.name() === 'process')!;
+
+    const ocrOption = processCmd.options.find((opt) => opt.long === '--no-ocr');
+    expect(ocrOption).toBeDefined();
+  });
+
+  it('should accept --ocr-language option with default eng', () => {
+    const program = createTestProgram();
+    const processCmd = program.commands.find((cmd) => cmd.name() === 'process')!;
+
+    const langOption = processCmd.options.find((opt) => opt.long === '--ocr-language');
+    expect(langOption).toBeDefined();
+    expect(langOption!.defaultValue).toBe('eng');
+  });
+
+  it('should accept --ocr-dpi option with default 300', () => {
+    const program = createTestProgram();
+    const processCmd = program.commands.find((cmd) => cmd.name() === 'process')!;
+
+    const dpiOption = processCmd.options.find((opt) => opt.long === '--ocr-dpi');
+    expect(dpiOption).toBeDefined();
+    expect(dpiOption!.defaultValue).toBe('300');
+  });
 });

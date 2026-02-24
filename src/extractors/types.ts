@@ -28,4 +28,7 @@ export interface DocumentMetadata {
   pageCount?: number;
   isScanned?: boolean;
   sourceFormat: string;
+  ocrConfidence?: number;
+  ocrEngine?: string;
+  lowConfidencePages?: number[];
 }

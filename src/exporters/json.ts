@@ -20,6 +20,14 @@ export class JsonExporter implements IExporter {
       qualityIndicators: doc.qualityIndicators,
     };
 
+    if (doc.metadata.isScanned) {
+      output.ocr = {
+        engine: doc.metadata.ocrEngine,
+        confidence: doc.metadata.ocrConfidence,
+        lowConfidencePages: doc.metadata.lowConfidencePages,
+      };
+    }
+
     if (options.includeMetadata) {
       output.sections = doc.sections.map((s) => ({
         id: s.id,

@@ -25,6 +25,9 @@ export function registerProcessCommand(program: Command): void {
     .option('--no-cache', 'Disable caching')
     .option('--verbose', 'Enable verbose output', false)
     .option('--dry-run', 'Analyze without exporting', false)
+    .option('--no-ocr', 'Disable OCR fallback for scanned PDFs')
+    .option('--ocr-language <lang>', 'OCR language code (Tesseract format)', 'eng')
+    .option('--ocr-dpi <number>', 'OCR rasterization DPI (72-600)', '300')
     .action(async (file: string, options: Record<string, unknown>) => {
       try {
         const filePath = resolve(file as string);
@@ -51,13 +54,30 @@ export function registerProcessCommand(program: Command): void {
         const verbose = options['verbose'] as boolean;
         const dryRun = options['dryRun'] as boolean;
 
+        // OCR options
+        const ocrEnabled = options['ocr'] as boolean; // --no-ocr sets this to false
+        const ocrLanguage = options['ocrLanguage'] as string;
+        const ocrDpi = parseInt(options['ocrDpi'] as string, 10);
+
+        if (ocrDpi < 72 || ocrDpi > 600) {
+          console.error('Error: --ocr-dpi must be between 72 and 600');
+          process.exitCode = 1;
+          return;
+        }
+
+        const ocrOptions = {
+          enabled: ocrEnabled,
+          language: ocrLanguage,
+          dpi: ocrDpi,
+          concurrency: 4,
+        };
+
         const stat = statSync(filePath);
 
         if (stat.isDirectory()) {
-          // Batch mode
-          await processBatch(filePath, { preset, formats, outputDir, chunkSize, cache, verbose, dryRun });
+          await processBatch(filePath, { preset, formats, outputDir, chunkSize, cache, verbose, dryRun, ocr: ocrOptions });
         } else {
-          await processSingleFile(filePath, { preset, formats, outputDir, chunkSize, cache, verbose, dryRun });
+          await processSingleFile(filePath, { preset, formats, outputDir, chunkSize, cache, verbose, dryRun, ocr: ocrOptions });
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -75,6 +95,7 @@ interface ProcessOptions {
   cache: boolean;
   verbose: boolean;
   dryRun: boolean;
+  ocr: { enabled: boolean; language: string; dpi: number; concurrency: number };
 }
 
 async function processSingleFile(filePath: string, opts: ProcessOptions): Promise<void> {
@@ -102,6 +123,7 @@ async function processSingleFile(filePath: string, opts: ProcessOptions): Promis
     cache: opts.cache,
     verbose: opts.verbose,
     outputDir: opts.outputDir,
+    ocr: opts.ocr,
   };
 
   const startTime = Date.now();
@@ -132,6 +154,9 @@ async function processSingleFile(filePath: string, opts: ProcessOptions): Promis
     console.log(`    Structure: ${result.qualityScore.structureScore}/100`);
     console.log(`    Chunks: ${result.qualityScore.chunkConsistencyScore}/100`);
     console.log(`    Metadata: ${result.qualityScore.metadataScore}/100`);
+    if (result.document.metadata.isScanned) {
+      console.log(`  OCR: yes (confidence: ${result.document.metadata.ocrConfidence?.toFixed(1)}%)`);
+    }
     console.log(`  Time: ${elapsed}ms`);
     return;
   }
@@ -142,6 +167,13 @@ async function processSingleFile(filePath: string, opts: ProcessOptions): Promis
   for (const er of result.exportResults) {
     for (const f of er.files) {
       console.log(`  Output: ${f}`);
+    }
+  }
+
+  if (result.document.metadata.isScanned) {
+    console.log(`  OCR: ${result.document.metadata.ocrEngine} (confidence: ${result.document.metadata.ocrConfidence?.toFixed(1)}%)`);
+    if (result.document.metadata.lowConfidencePages?.length) {
+      console.log(`  Low confidence pages: ${result.document.metadata.lowConfidencePages.join(', ')}`);
     }
   }
 

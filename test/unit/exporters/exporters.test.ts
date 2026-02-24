@@ -94,6 +94,64 @@ describe('PlainTextExporter', () => {
   });
 });
 
+const makeOcrDoc = (): StructuredDocument => ({
+  metadata: {
+    title: 'Scanned Doc', sourceFormat: 'pdf',
+    isScanned: true, ocrConfidence: 78.5, ocrEngine: 'tesseract',
+    lowConfidencePages: [3, 7],
+  },
+  sections: [
+    {
+      id: 'ch1', level: 1, title: 'Page 1', content: 'OCR extracted text.',
+      children: [], meta: { wordCount: 3, charCount: 19 },
+    },
+  ],
+  qualityIndicators: { structurePreserved: 50, noiseRemoved: 40, metadataCompleteness: 60 },
+});
+
+describe('MarkdownExporter OCR provenance', () => {
+  it('should include OCR provenance note for scanned docs', async () => {
+    const exporter = new MarkdownExporter();
+    const result = await exporter.export(makeOcrDoc(), makeChunks(), { outputDir: tmpDir, preset: 'rag', includeMetadata: true });
+    const content = readFileSync(result.files[0], 'utf-8');
+    expect(content).toContain('Extracted via OCR');
+    expect(content).toContain('tesseract');
+    expect(content).toContain('78.5');
+  });
+});
+
+describe('JsonExporter OCR provenance', () => {
+  it('should include ocr block for scanned docs', async () => {
+    const exporter = new JsonExporter();
+    const result = await exporter.export(makeOcrDoc(), makeChunks(), { outputDir: tmpDir, preset: 'rag', includeMetadata: true });
+    const data = JSON.parse(readFileSync(result.files[0], 'utf-8'));
+    expect(data.ocr).toBeDefined();
+    expect(data.ocr.engine).toBe('tesseract');
+    expect(data.ocr.confidence).toBe(78.5);
+    expect(data.ocr.lowConfidencePages).toEqual([3, 7]);
+  });
+});
+
+describe('JsonlExporter OCR provenance', () => {
+  it('should include ocr_confidence per chunk for scanned docs', async () => {
+    const exporter = new JsonlExporter();
+    const result = await exporter.export(makeOcrDoc(), makeChunks(), { outputDir: tmpDir, preset: 'rag', includeMetadata: true });
+    const lines = readFileSync(result.files[0], 'utf-8').trim().split('\n');
+    const parsed = JSON.parse(lines[0]);
+    expect(parsed.ocr_confidence).toBe(78.5);
+  });
+});
+
+describe('PlainTextExporter OCR provenance', () => {
+  it('should include OCR provenance header for scanned docs', async () => {
+    const exporter = new PlainTextExporter();
+    const result = await exporter.export(makeOcrDoc(), makeChunks(), { outputDir: tmpDir, preset: 'rag', includeMetadata: false });
+    const content = readFileSync(result.files[0], 'utf-8');
+    expect(content).toContain('Extracted via OCR');
+    expect(content).toContain('tesseract');
+  });
+});
+
 describe('Export stats', () => {
   it('should include correct stats in result', async () => {
     const exporter = new JsonExporter();

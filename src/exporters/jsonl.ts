@@ -33,6 +33,10 @@ export class JsonlExporter implements IExporter {
         };
       }
 
+      if (doc.metadata.isScanned) {
+        record.ocr_confidence = doc.metadata.ocrConfidence;
+      }
+
       lines.push(JSON.stringify(record));
     }
 

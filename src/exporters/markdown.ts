@@ -28,7 +28,16 @@ export class MarkdownExporter implements IExporter {
       if (doc.metadata.author) md += `author: ${doc.metadata.author}\n`;
       if (doc.metadata.language) md += `language: ${doc.metadata.language}\n`;
       if (doc.metadata.sourceFormat) md += `source: ${doc.metadata.sourceFormat}\n`;
+      if (doc.metadata.isScanned) {
+        md += `ocr_engine: ${doc.metadata.ocrEngine ?? 'unknown'}\n`;
+        md += `ocr_confidence: ${doc.metadata.ocrConfidence?.toFixed(1) ?? 'N/A'}%\n`;
+      }
       md += '---\n\n';
+    }
+
+    // OCR provenance note
+    if (doc.metadata.isScanned) {
+      md += `> *Extracted via OCR (${doc.metadata.ocrEngine ?? 'unknown'}, confidence: ${doc.metadata.ocrConfidence?.toFixed(1) ?? 'N/A'}%)*\n\n`;
     }
 
     // Render sections recursively

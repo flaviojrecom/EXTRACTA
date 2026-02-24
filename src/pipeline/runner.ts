@@ -11,9 +11,24 @@ import { JsonlExporter } from '../exporters/jsonl.js';
 import { PlainTextExporter } from '../exporters/plain-text.js';
 import { computeQualityScore, type QualityBreakdown } from '../quality/scorer.js';
 import { ExtractorRegistry } from '../extractors/registry.js';
+import { PdfOcrExtractor } from '../extractors/pdf-ocr.js';
 import { Normalizer } from './normalizer.js';
 import { Cleaner, type CleanerResult, type CleaningLevel } from './cleaner.js';
 import { StructureBuilder } from './structure-builder.js';
+
+export interface OcrPipelineOptions {
+  enabled: boolean;
+  language: string;
+  dpi: number;
+  concurrency: number;
+}
+
+export const DEFAULT_OCR_PIPELINE_OPTIONS: OcrPipelineOptions = {
+  enabled: true,
+  language: 'eng',
+  dpi: 300,
+  concurrency: 4,
+};
 
 export interface PipelineConfig {
   cleaningLevel: CleaningLevel;
@@ -23,6 +38,7 @@ export interface PipelineConfig {
   cache: boolean;
   verbose: boolean;
   outputDir?: string;
+  ocr?: Partial<OcrPipelineOptions>;
 }
 
 export interface PipelineResult {
@@ -51,7 +67,19 @@ export class PipelineRunner {
 
   constructor(config: PipelineConfig) {
     this.config = config;
-    this.extractorRegistry = new ExtractorRegistry();
+    const ocrOpts = { ...DEFAULT_OCR_PIPELINE_OPTIONS, ...config.ocr };
+    this.extractorRegistry = new ExtractorRegistry({ ocrEnabled: ocrOpts.enabled });
+
+    // If OCR enabled with custom config, replace default fallback with configured one
+    if (ocrOpts.enabled && config.ocr) {
+      const ocrExtractor = new PdfOcrExtractor({
+        language: ocrOpts.language,
+        dpi: ocrOpts.dpi,
+        concurrency: ocrOpts.concurrency,
+      });
+      this.extractorRegistry.registerFallback(ocrExtractor);
+    }
+
     this.normalizer = new Normalizer();
     this.cleaner = new Cleaner(config.cleaningLevel);
   }
@@ -72,14 +100,16 @@ export class PipelineRunner {
     const cache = this.config.cache ? new FileCache(dirname(filePath)) : null;
     const hash = cache ? FileCache.hashContent(buffer) : '';
 
-    // 2. Extract
+    // 2. Extract (with OCR fallback for scanned PDFs)
     log?.('extract', 2, totalSteps, `Format: ${ext}`);
     const extractor = this.extractorRegistry.getExtractor(ext, buffer);
-    const extraction = await extractor.extract(buffer, {
-      fileName: basename(filePath),
-      extension: ext,
-      sizeBytes: buffer.length,
-    });
+    const fileMetadata = { fileName: basename(filePath), extension: ext, sizeBytes: buffer.length };
+    const extraction = await this.extractorRegistry.extractWithFallback(
+      extractor,
+      buffer,
+      fileMetadata,
+      log ? (page, total) => log('extract', 2, totalSteps, `OCR page ${page}/${total}`) : undefined,
+    );
 
     // 3. Normalize
     log?.('normalize', 3, totalSteps);

@@ -73,4 +73,44 @@ describe('Quality Scorer', () => {
     expect(score).toHaveProperty('metadataScore');
     expect(score).toHaveProperty('overall');
   });
+
+  it('should apply OCR penalty to structure score for scanned documents', () => {
+    const normalDoc = makeDoc({ structurePreserved: 90 });
+    const ocrDoc = makeDoc({ structurePreserved: 90 });
+    ocrDoc.metadata.isScanned = true;
+
+    const normalScore = computeQualityScore(normalDoc, makeChunks(3));
+    const ocrScore = computeQualityScore(ocrDoc, makeChunks(3));
+
+    expect(ocrScore.structureScore).toBeLessThan(normalScore.structureScore);
+  });
+
+  it('should not apply OCR penalty for non-scanned documents', () => {
+    const doc = makeDoc({ structurePreserved: 90 });
+    const score = computeQualityScore(doc, makeChunks(3));
+    // Without OCR penalty, structure score should reflect full preserved value
+    expect(score.structureScore).toBeGreaterThan(50);
+  });
+
+  it('should give metadata bonus for high OCR confidence', () => {
+    const doc = makeDoc();
+    doc.metadata.ocrConfidence = 90;
+    const highConfScore = computeQualityScore(doc, makeChunks(3));
+
+    const doc2 = makeDoc();
+    const noOcrScore = computeQualityScore(doc2, makeChunks(3));
+
+    expect(highConfScore.metadataScore).toBeGreaterThanOrEqual(noOcrScore.metadataScore);
+  });
+
+  it('should penalize metadata score for low OCR confidence', () => {
+    const doc = makeDoc();
+    doc.metadata.ocrConfidence = 40;
+    const lowConfScore = computeQualityScore(doc, makeChunks(3));
+
+    const doc2 = makeDoc();
+    const noOcrScore = computeQualityScore(doc2, makeChunks(3));
+
+    expect(lowConfScore.metadataScore).toBeLessThanOrEqual(noOcrScore.metadataScore);
+  });
 });

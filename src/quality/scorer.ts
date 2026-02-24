@@ -26,7 +26,12 @@ export function computeQualityScore(
 
 function computeStructureScore(doc: StructuredDocument): number {
   // Based on QualityIndicators from structure builder
-  const preserved = doc.qualityIndicators.structurePreserved; // 0-100
+  let preserved = doc.qualityIndicators.structurePreserved; // 0-100
+
+  // OCR penalty: scanned documents lose headings, lists, tables
+  if (doc.metadata.isScanned) {
+    preserved = preserved * 0.6;
+  }
 
   // Bonus for hierarchy depth
   const maxDepth = getMaxDepth(doc.sections);
@@ -81,7 +86,18 @@ function computeMetadataScore(doc: StructuredDocument, chunks: Chunk[]): number 
     score += doc.qualityIndicators.metadataCompleteness > 50 ? 1 : 0;
   }
 
-  return Math.round((score / total) * 100);
+  let baseScore = Math.round((score / total) * 100);
+
+  // OCR confidence adjustment
+  if (doc.metadata.ocrConfidence !== undefined) {
+    if (doc.metadata.ocrConfidence > 80) {
+      baseScore = Math.min(100, baseScore + 5); // small bonus for high confidence
+    } else if (doc.metadata.ocrConfidence < 60) {
+      baseScore = Math.max(0, baseScore - 10); // penalty for low confidence
+    }
+  }
+
+  return baseScore;
 }
 
 function getMaxDepth(sections: { children: typeof sections }[], depth = 1): number {

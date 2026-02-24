@@ -17,6 +17,12 @@ export class PlainTextExporter implements IExporter {
 
     // Strip markdown formatting to produce plain text
     let text = '';
+
+    // OCR provenance note
+    if (doc.metadata.isScanned) {
+      text += `[Extracted via OCR (${doc.metadata.ocrEngine ?? 'unknown'}, confidence: ${doc.metadata.ocrConfidence?.toFixed(1) ?? 'N/A'}%)]\n\n`;
+    }
+
     for (const section of flattenSections(doc.sections)) {
       if (section.title && section.title !== 'Document') {
         text += section.title + '\n\n';
