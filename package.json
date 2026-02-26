@@ -24,7 +24,10 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "web": "next dev web -p 3000",
-    "extracta": "node dist/index.js"
+    "extracta": "node dist/index.js",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "storybook:build": "storybook build"
   },
   "keywords": [
     "extracta",
@@ -53,14 +56,26 @@
     "postcss": "^8.5.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.1",
+    "recharts": "^3.7.0",
     "tailwindcss": "^4.2.1",
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
+    "@storybook/addon-a11y": "^10.2.13",
+    "@storybook/addon-docs": "^10.2.13",
+    "@storybook/addon-essentials": "^8.6.14",
+    "@storybook/addon-interactions": "^8.6.14",
+    "@storybook/addon-links": "^10.2.13",
+    "@storybook/addon-onboarding": "^10.2.13",
+    "@storybook/addon-themes": "^10.2.13",
+    "@storybook/nextjs": "^10.2.13",
+    "@storybook/test": "^8.6.15",
     "@types/node": "^22.13.0",
     "eslint": "^9.20.0",
     "prettier": "^3.5.0",
+    "storybook": "^10.2.13",
     "tsup": "^8.4.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",

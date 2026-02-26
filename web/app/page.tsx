@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import { Logo } from '../components/Logo';
+import { FlagButton } from '../components/FlagButton';
+import { UploadIcon } from '../components/UploadIcon';
+import { FileIcon } from '../components/FileIcon';
 
 type Preset = 'rag' | 'knowledge-base' | 'fine-tuning';
 type Lang = 'en' | 'pt';
@@ -187,96 +191,7 @@ function getPresetInfo(lang: Lang) {
   } as Record<Preset, { label: string; desc: string; recommended: string; cleaning: string; overlap: string; icon: React.ReactNode }>;
 }
 
-// ─── Logo ────────────────────────────────────────────────
-function Logo() {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative">
-        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="3" y="2" width="11" height="15" rx="1.5" fill="rgba(255,255,255,0.25)" stroke="white" strokeWidth="1.2" />
-            <line x1="6" y1="6" x2="11" y2="6" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="6" y1="9" x2="11" y2="9" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-            <line x1="6" y1="12" x2="9" y2="12" stroke="white" strokeWidth="1.2" strokeLinecap="round" />
-            <path d="M14 9l4 0M18 9l-2-2.5M18 9l-2 2.5" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="18" cy="18" r="1.2" fill="#34d399" />
-            <circle cx="21" cy="15" r="1.2" fill="#34d399" />
-            <circle cx="21" cy="21" r="1.2" fill="#34d399" />
-          </svg>
-        </div>
-        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-zinc-950" />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-2xl font-extrabold tracking-tight text-white leading-none">
-          EXTRACTA
-        </span>
-        <span className="text-[10px] text-zinc-500 tracking-[0.25em] uppercase mt-0.5 font-medium">
-          knowledge engine
-        </span>
-      </div>
-    </div>
-  );
-}
-
-// ─── Flag buttons ────────────────────────────────────────
-function FlagButton({ lang, active, onClick }: { lang: 'pt' | 'en'; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`w-6 h-6 rounded-full overflow-hidden transition-all duration-200 ${
-        active
-          ? 'ring-1 ring-blue-500 ring-offset-1 ring-offset-zinc-950 scale-105'
-          : 'opacity-40 hover:opacity-70 grayscale hover:grayscale-0'
-      }`}
-      title={lang === 'pt' ? 'Português do Brasil' : 'English'}
-    >
-      {lang === 'pt' ? (
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" fill="#009739" />
-          <polygon points="16,4 30,16 16,28 2,16" fill="#FEDD00" />
-          <circle cx="16" cy="16" r="6" fill="#012169" />
-          <rect x="10" y="14.5" width="12" height="3" fill="#fff" rx="1.5" />
-        </svg>
-      ) : (
-        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" fill="#B22234" />
-          {[2.5, 7.5, 12.5, 17.5, 22.5, 27.5].map((y) => (
-            <rect key={y} y={y} width="32" height="2.5" fill="#fff" />
-          ))}
-          <rect width="14" height="17" fill="#3C3B6E" />
-          {[4, 8, 12].map((y) => (
-            <g key={y}>
-              {[3, 7, 11].map((x) => (
-                <circle key={`${x}-${y}`} cx={x} cy={y} r="0.8" fill="#fff" />
-              ))}
-            </g>
-          ))}
-        </svg>
-      )}
-    </button>
-  );
-}
-
-// ─── Upload icon ─────────────────────────────────────────
-function UploadIcon() {
-  return (
-    <svg className="w-10 h-10 text-zinc-600 mx-auto mb-3" viewBox="0 0 40 40" fill="none">
-      <rect x="4" y="8" width="32" height="28" rx="4" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 3" />
-      <path d="M20 28V16M20 16l-5 5M20 16l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-// ─── File icon ───────────────────────────────────────────
-function FileIcon() {
-  return (
-    <svg className="w-8 h-8 text-emerald-400 mx-auto mb-2" viewBox="0 0 32 32" fill="none">
-      <path d="M8 4h10l8 8v16a2 2 0 01-2 2H8a2 2 0 01-2-2V6a2 2 0 012-2z" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M18 4v8h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M12 20l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+// Components are now imported from /web/components/*
 
 // ─── Main ────────────────────────────────────────────────
 interface ProgressState {
