@@ -15,6 +15,7 @@ import type { ExportFormat, Preset } from '@extracta/exporters/types';
 import type { CleaningLevel } from '@extracta/pipeline/cleaner';
 
 const PRESET_DEFAULTS: Record<string, { cleaningLevel: CleaningLevel; formats: ExportFormat[] }> = {
+  raw: { cleaningLevel: 'light', formats: ['md', 'txt'] },
   'knowledge-base': { cleaningLevel: 'light', formats: ['md'] },
   rag: { cleaningLevel: 'standard', formats: ['json'] },
   'fine-tuning': { cleaningLevel: 'aggressive', formats: ['jsonl'] },
@@ -26,7 +27,7 @@ const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
 export async function POST(req: Request) {
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
-  const preset = (formData.get('preset') as Preset) || 'rag';
+  const preset = (formData.get('preset') as Preset) || 'raw';
   const formats = formData.get('formats') as string | null;
 
   // Validation (return JSON for errors — no SSE needed)

@@ -18,7 +18,7 @@ export interface ExportOptions {
   includeMetadata: boolean;
 }
 
-export type Preset = 'knowledge-base' | 'rag' | 'fine-tuning';
+export type Preset = 'raw' | 'knowledge-base' | 'rag' | 'fine-tuning';
 
 export interface ExportResult {
   files: string[];

@@ -6,7 +6,7 @@ import { FlagButton } from '../components/FlagButton';
 import { UploadIcon } from '../components/UploadIcon';
 import { FileIcon } from '../components/FileIcon';
 
-type Preset = 'rag' | 'knowledge-base' | 'fine-tuning';
+type Preset = 'raw' | 'rag' | 'knowledge-base' | 'fine-tuning';
 type Lang = 'en' | 'pt';
 
 interface ProcessResult {
@@ -57,6 +57,8 @@ const T: Record<Lang, Record<string, string>> = {
     language: 'Language',
     author: 'Author',
     bestOutput: 'Best output',
+    rawLabel: 'RAW',
+    rawDesc: 'Original text with corrections only',
     ragLabel: 'RAG',
     ragDesc: 'Optimized for retrieval systems',
     kbLabel: 'Knowledge Base',
@@ -111,6 +113,8 @@ const T: Record<Lang, Record<string, string>> = {
     language: 'Idioma',
     author: 'Autor',
     bestOutput: 'Melhor saída',
+    rawLabel: 'RAW',
+    rawDesc: 'Texto original com correções apenas',
     ragLabel: 'RAG',
     ragDesc: 'Otimizado para sistemas de busca',
     kbLabel: 'Base de Conhecimento',
@@ -149,6 +153,19 @@ const STAGE_KEYS: Record<string, string> = {
 function getPresetInfo(lang: Lang) {
   const t = T[lang];
   return {
+    raw: {
+      label: t.rawLabel,
+      desc: t.rawDesc,
+      recommended: 'TXT',
+      cleaning: t.cleanLight,
+      overlap: '—',
+      icon: (
+        <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none">
+          <path d="M4 3h9l3 3v11a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+          <path d="M6 9h8M6 12h6M6 15h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      ),
+    },
     rag: {
       label: t.ragLabel,
       desc: t.ragDesc,
@@ -203,7 +220,7 @@ interface ProgressState {
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [preset, setPreset] = useState<Preset>('rag');
+  const [preset, setPreset] = useState<Preset>('raw');
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState<ProgressState | null>(null);
   const [result, setResult] = useState<ProcessResult | null>(null);
@@ -211,6 +228,7 @@ export default function Home() {
   const [ocr, setOcr] = useState<{ page: number; total: number; startedAt: number; pageTimestamps: number[] } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [lang, setLang] = useState<Lang>('pt');
+  const [activeDownload, setActiveDownload] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const t = T[lang];
@@ -238,6 +256,7 @@ export default function Home() {
     setError(null);
     setResult(null);
     setProgress(null);
+    setActiveDownload(null);
     setOcr(null);
 
     try {
@@ -315,7 +334,7 @@ export default function Home() {
     v >= 70 ? 'from-emerald-500 to-emerald-400' : v >= 40 ? 'from-amber-500 to-amber-400' : 'from-red-500 to-red-400';
 
   return (
-    <main className="max-w-3xl mx-auto px-4 py-8">
+    <main className="max-w-4xl mx-auto px-4 py-8">
       {/* ── Header ── */}
       <header className="flex items-center justify-between mb-2">
         <Logo />
@@ -371,7 +390,7 @@ export default function Home() {
       {/* ── Preset Selector ── */}
       <div className="mb-6">
         <p className="text-[11px] text-blue-400/70 mb-3 text-center tracking-wide">{t.presetHint}</p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {(Object.entries(presetInfo) as [Preset, typeof presetInfo.rag][]).map(([key, info]) => (
             <button
               key={key}
@@ -584,19 +603,21 @@ export default function Home() {
             {result.files.map((f) => {
               const isRec = f.format === presetInfo[preset].recommended.toLowerCase() ||
                 (f.format === 'md' && presetInfo[preset].recommended === 'Markdown');
+              const isActive = activeDownload ? activeDownload === f.format : isRec;
               return (
                 <a
                   key={f.path}
                   href={`/api/download/${result.sessionId}/${f.path}`}
                   download
+                  onClick={() => setActiveDownload(f.format!)}
                   className={`py-3 rounded-xl text-center text-sm font-medium transition-all duration-200 ${
-                    isRec
+                    isActive
                       ? 'glass-active text-blue-300'
                       : 'glass text-zinc-400'
                   }`}
                 >
                   {t.download} .{f.format}
-                  {isRec && <span className="block text-[9px] text-blue-400/80 mt-0.5 font-normal">{t.recommended}</span>}
+                  {isRec && !activeDownload && <span className="block text-[9px] text-blue-400/80 mt-0.5 font-normal">{t.recommended}</span>}
                 </a>
               );
             })}
