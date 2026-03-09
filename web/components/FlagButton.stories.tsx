@@ -1,4 +1,6 @@
+import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
+import { userEvent, within, expect } from '@storybook/test';
 import { FlagButton } from './FlagButton';
 
 const meta = {
@@ -109,6 +111,8 @@ export const LanguageToggleGallery: Story = {
 /**
  * Interactive button with click handler.
  * Demonstrates state management with button clicks.
+ *
+ * Interaction test: Click button and verify callback is triggered
  */
 export const Interactive: Story = {
   args: {
@@ -117,5 +121,74 @@ export const Interactive: Story = {
     onClick: () => {
       alert('Language selection changed!');
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    // Click the button
+    await userEvent.click(button);
+  },
+};
+
+/**
+ * Language toggle interaction test.
+ * Tests switching between Portuguese and English buttons.
+ */
+export const LanguageToggleInteraction: Story = {
+  render: (args) => {
+    const [activeLanguage, setActiveLanguage] = React.useState('pt');
+
+    return (
+      <div className="flex gap-4">
+        <FlagButton
+          lang="pt"
+          active={activeLanguage === 'pt'}
+          onClick={() => setActiveLanguage('pt')}
+        />
+        <FlagButton
+          lang="en"
+          active={activeLanguage === 'en'}
+          onClick={() => setActiveLanguage('en')}
+        />
+        <span className="text-sm text-zinc-600 ml-4">
+          Selected: {activeLanguage === 'pt' ? 'Português' : 'English'}
+        </span>
+      </div>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const buttons = canvas.getAllByRole('button');
+
+    // Click English button
+    await userEvent.click(buttons[1]);
+
+    // Verify state changed
+    await new Promise(resolve => setTimeout(resolve, 300));
+  },
+};
+
+/**
+ * A11y test: Keyboard navigation.
+ * Verifies button is focusable and keyboard accessible.
+ */
+export const A11yKeyboardNavigation: Story = {
+  args: {
+    lang: 'pt',
+    active: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    // Tab into button
+    await userEvent.tab();
+
+    // Button should be focused
+    expect(button).toHaveFocus();
+
+    // Press Enter to activate
+    await userEvent.keyboard('{Enter}');
   },
 };

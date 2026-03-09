@@ -1,9 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import RootLayout from './layout';
+
+/**
+ * Simulates the RootLayout body styling without rendering <html>/<body> tags,
+ * which cause hydration errors inside Storybook's DOM.
+ */
+function LayoutShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-zinc-950 text-zinc-100 min-h-screen antialiased">
+      {children}
+    </div>
+  );
+}
 
 const meta = {
   title: 'Templates/RootLayout',
-  component: RootLayout,
+  component: LayoutShell,
   tags: ['autodocs'],
   parameters: {
     layout: 'fullscreen',
@@ -11,11 +22,12 @@ const meta = {
       description: {
         component:
           'Root layout component for the application. ' +
-          'Wraps all pages with global styling and HTML setup.',
+          'Wraps all pages with global styling and HTML setup. ' +
+          'Storybook renders a shell version to avoid <html>/<body> hydration errors.',
       },
     },
   },
-} satisfies Meta<typeof RootLayout>;
+} satisfies Meta<typeof LayoutShell>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -26,7 +38,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   render: () => (
-    <RootLayout>
+    <LayoutShell>
       <div className="max-w-3xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-white mb-4">Sample Page</h1>
         <p className="text-zinc-400 mb-6">This is sample content rendered inside the RootLayout.</p>
@@ -41,7 +53,7 @@ export const Default: Story = {
           </div>
         </div>
       </div>
-    </RootLayout>
+    </LayoutShell>
   ),
 };
 
@@ -51,11 +63,11 @@ export const Default: Story = {
  */
 export const MinimalContent: Story = {
   render: () => (
-    <RootLayout>
+    <LayoutShell>
       <div className="max-w-3xl mx-auto px-4 py-8 text-center">
         <p className="text-zinc-400">Minimal content example</p>
       </div>
-    </RootLayout>
+    </LayoutShell>
   ),
 };
 
@@ -65,7 +77,7 @@ export const MinimalContent: Story = {
  */
 export const ExtendedContent: Story = {
   render: () => (
-    <RootLayout>
+    <LayoutShell>
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-white mb-4">Main Title</h1>
@@ -83,6 +95,6 @@ export const ExtendedContent: Story = {
           </div>
         ))}
       </div>
-    </RootLayout>
+    </LayoutShell>
   ),
 };

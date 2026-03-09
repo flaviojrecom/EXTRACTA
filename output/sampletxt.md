@@ -1,0 +1,15 @@
+# sample.txt
+
+---
+language: en
+source: txt
+---
+
+Knowledge extraction is the process of identifying and capturing structured information from unstructured or semi-structured sources. This discipline sits at the intersection of natural language processing, information retrieval, and artificial intelligence.
+
+
+Modern knowledge extraction pipelines typically involve several stages: document ingestion, text extraction, normalization, cleaning, structural analysis, and finally chunking for downstream consumption. Each stage transforms the data incrementally, preserving semantic meaning while removing noise and formatting artifacts.
+
+
+The output of a well-designed extraction pipeline is clean, structured content ready for use in retrieval-augmented generation (RAG) systems, fine-tuning datasets, or knowledge base construction. Quality metrics such as structure preservation, noise removal, and metadata completeness help ensure the extracted knowledge meets the requirements of its intended application.
+

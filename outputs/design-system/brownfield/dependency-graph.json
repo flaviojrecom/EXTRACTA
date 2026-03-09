@@ -1,0 +1,224 @@
+{
+  "graph_metadata": {
+    "scan_date": "2026-02-26T00:00:00Z",
+    "total_nodes": 11,
+    "total_edges": 10,
+    "has_cycles": false,
+    "graph_format": "adjacency list"
+  },
+  "nodes": [
+    {
+      "id": "StatusBadge",
+      "label": "StatusBadge",
+      "type": "atom",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/StatusBadge.jsx",
+      "phase": 1,
+      "in_degree": 0,
+      "out_degree": 3
+    },
+    {
+      "id": "Card",
+      "label": "Card",
+      "type": "molecule",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Card.jsx",
+      "phase": 2,
+      "in_degree": 0,
+      "out_degree": 5
+    },
+    {
+      "id": "Header",
+      "label": "Header",
+      "type": "molecule",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Header.jsx",
+      "phase": 2,
+      "in_degree": 0,
+      "out_degree": 0
+    },
+    {
+      "id": "Chart",
+      "label": "Chart",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Chart.jsx",
+      "phase": 2,
+      "in_degree": 0,
+      "out_degree": 1
+    },
+    {
+      "id": "IssuesList",
+      "label": "IssuesList",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/IssuesList.jsx",
+      "phase": 3,
+      "in_degree": 2,
+      "out_degree": 0
+    },
+    {
+      "id": "HealthScore",
+      "label": "HealthScore",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/HealthScore.jsx",
+      "phase": 3,
+      "in_degree": 2,
+      "out_degree": 0
+    },
+    {
+      "id": "DomainCard",
+      "label": "DomainCard",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/DomainCard.jsx",
+      "phase": 3,
+      "in_degree": 2,
+      "out_degree": 0
+    },
+    {
+      "id": "TechDebtList",
+      "label": "TechDebtList",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/TechDebtList.jsx",
+      "phase": 3,
+      "in_degree": 2,
+      "out_degree": 0
+    },
+    {
+      "id": "AutoFixLog",
+      "label": "AutoFixLog",
+      "type": "organism",
+      "file": ".aios-core/scripts/diagnostics/health-dashboard/src/components/AutoFixLog.jsx",
+      "phase": 3,
+      "in_degree": 1,
+      "out_degree": 0
+    },
+    {
+      "id": "RootLayout",
+      "label": "RootLayout",
+      "type": "template",
+      "file": "web/app/layout.tsx",
+      "phase": 4,
+      "in_degree": 0,
+      "out_degree": 1
+    },
+    {
+      "id": "Home",
+      "label": "Home",
+      "type": "page",
+      "file": "web/app/page.tsx",
+      "phase": 4,
+      "in_degree": 1,
+      "out_degree": 0
+    }
+  ],
+  "edges": [
+    {
+      "source": "StatusBadge",
+      "target": "IssuesList",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "StatusBadge",
+      "target": "DomainCard",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "StatusBadge",
+      "target": "TechDebtList",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Card",
+      "target": "IssuesList",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Card",
+      "target": "HealthScore",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Card",
+      "target": "DomainCard",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Card",
+      "target": "TechDebtList",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Card",
+      "target": "AutoFixLog",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "Chart",
+      "target": "HealthScore",
+      "type": "dependency",
+      "strength": "direct"
+    },
+    {
+      "source": "RootLayout",
+      "target": "Home",
+      "type": "dependency",
+      "strength": "direct"
+    }
+  ],
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Atoms",
+      "components": ["StatusBadge"],
+      "blockers": [],
+      "unblocks": ["IssuesList", "DomainCard", "TechDebtList"]
+    },
+    {
+      "phase": 2,
+      "name": "Molecules",
+      "components": ["Card", "Header", "Chart"],
+      "blockers": ["StatusBadge"],
+      "unblocks": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"]
+    },
+    {
+      "phase": 3,
+      "name": "Organisms",
+      "components": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"],
+      "blockers": ["Card", "StatusBadge", "Chart"],
+      "unblocks": []
+    },
+    {
+      "phase": 4,
+      "name": "Pages & Layouts",
+      "components": ["RootLayout", "Home"],
+      "blockers": [],
+      "unblocks": []
+    }
+  ],
+  "statistics": {
+    "total_components": 11,
+    "by_type": {
+      "atom": 1,
+      "molecule": 3,
+      "organism": 5,
+      "template": 1,
+      "page": 1
+    },
+    "by_phase": {
+      "phase_1": 1,
+      "phase_2": 3,
+      "phase_3": 5,
+      "phase_4": 2
+    },
+    "dependency_stats": {
+      "components_with_no_deps": 4,
+      "components_with_max_deps": "Card (5 dependents)",
+      "max_dependency_chain": 3,
+      "circular_dependencies": 0
+    }
+  }
+}

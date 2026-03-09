@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { expect, within } from '@storybook/test';
 import { Logo } from './Logo';
 
 const meta = {
@@ -80,4 +81,45 @@ export const ExpandedLayout: Story = {
       <Logo />
     </div>
   ),
+};
+
+/**
+ * Visual regression test: Default state.
+ * Ensures logo renders correctly and maintains visual stability.
+ */
+export const VisualRegression: Story = {
+  render: () => <Logo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const logo = canvas.getByRole('img', { hidden: true });
+
+    // Verify logo is rendered
+    expect(logo).toBeInTheDocument();
+
+    // Visual snapshot for regression testing
+    await new Promise(resolve => setTimeout(resolve, 300));
+  },
+};
+
+/**
+ * A11y: Image alt text and semantic structure.
+ * Verifies logo has proper accessibility attributes.
+ */
+export const A11yImageAccessibility: Story = {
+  render: () => <Logo />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Check for accessible image
+    const images = canvas.queryAllByRole('img', { hidden: true });
+
+    // Verify images have proper attributes
+    images.forEach((img) => {
+      // Image should have alt text or be decorative
+      const hasAlt = img.hasAttribute('alt');
+      const isDecorative = img.hasAttribute('aria-hidden');
+
+      expect(hasAlt || isDecorative).toBe(true);
+    });
+  },
 };

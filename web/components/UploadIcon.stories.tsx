@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { within, expect } from '@storybook/test';
 import { UploadIcon } from './UploadIcon';
 
 const meta = {
@@ -108,4 +109,33 @@ export const VariationsGallery: Story = {
       </div>
     </div>
   ),
+};
+
+/**
+ * A11y: SVG accessibility.
+ * Verifies icon has proper ARIA attributes for screen readers.
+ */
+export const A11ySVGAccessibility: Story = {
+  render: () => <UploadIcon />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Check for SVG element
+    const svg = canvasElement.querySelector('svg');
+    expect(svg).toBeInTheDocument();
+
+    // SVG should have aria-label or aria-hidden for decorative icons
+    const hasAriaLabel = svg?.getAttribute('aria-label');
+    const isHidden = svg?.getAttribute('aria-hidden');
+
+    expect(hasAriaLabel || isHidden === 'true').toBe(true);
+  },
+};
+
+/**
+ * Visual regression: Icon rendering.
+ * Ensures icon renders consistently across renders.
+ */
+export const VisualRegressionSnapshot: Story = {
+  render: () => <UploadIcon />,
 };

@@ -1,0 +1,447 @@
+{
+  "scan_metadata": {
+    "source_path": "/Users/flaviogoncalvesjr/Code/EXTRACTA",
+    "scan_date": "2026-02-26T00:00:00Z",
+    "total_files_scanned": 11,
+    "total_components_found": 11,
+    "scan_duration_ms": 2847,
+    "scan_mode": "full"
+  },
+  "components": [
+    {
+      "name": "Home",
+      "file_path": "web/app/page.tsx",
+      "category": "pages",
+      "exports": ["default"],
+      "atomic_level": "page",
+      "props": {
+        "main component": {
+          "type": "react-component",
+          "useState": ["file", "preset", "processing", "progress", "result", "error", "ocr", "dragOver", "lang"],
+          "useCallback": ["handleFile", "handleDrop", "handleProcess"],
+          "useRef": ["inputRef"]
+        }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "react (useState, useCallback, useRef)"
+      ],
+      "complexity_score": 8,
+      "lines_of_code": 718,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "nested_components": [
+        "Logo",
+        "FlagButton",
+        "UploadIcon",
+        "FileIcon",
+        "ProcessResult (type)",
+        "ProgressState (type)"
+      ],
+      "migration_notes": [
+        "Large monolithic component (718 LOC) - candidate for decomposition",
+        "Contains 4 inline sub-components (Logo, FlagButton, UploadIcon, FileIcon)",
+        "Main component should be split into smaller molecules",
+        "State-heavy (8 useState hooks) - good for interaction testing",
+        "Uses SSE streaming for progress updates - needs async testing"
+      ]
+    },
+    {
+      "name": "RootLayout",
+      "file_path": "web/app/layout.tsx",
+      "category": "layouts",
+      "exports": ["default", "metadata"],
+      "atomic_level": "template",
+      "props": {
+        "children": { "type": "React.ReactNode" }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "next (Metadata)",
+        "css (./globals.css)"
+      ],
+      "complexity_score": 1,
+      "lines_of_code": 18,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Simple layout wrapper - straightforward to migrate",
+        "External dependency on globals.css",
+        "Metadata configuration included"
+      ]
+    },
+    {
+      "name": "IssuesList",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/IssuesList.jsx",
+      "category": "ui",
+      "exports": ["default"],
+      "atomic_level": "molecule",
+      "props": {
+        "issues": { "type": "array" },
+        "loading": { "type": "boolean", "optional": true },
+        "onFilter": { "type": "function", "optional": true }
+      },
+      "internal_dependencies": [
+        "Card",
+        "StatusBadge"
+      ],
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 3,
+      "lines_of_code": 52,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Depends on Card and StatusBadge components",
+        "Part of health-dashboard system",
+        "Medium complexity - good migration candidate"
+      ]
+    },
+    {
+      "name": "Card",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Card.jsx",
+      "category": "shared",
+      "exports": ["default"],
+      "atomic_level": "molecule",
+      "props": {
+        "children": { "type": "React.ReactNode" },
+        "title": { "type": "string", "optional": true },
+        "className": { "type": "string", "optional": true }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 2,
+      "lines_of_code": 28,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Foundation component - no internal deps",
+        "Reusable wrapper - should be migrated early",
+        "Atomic: could be atom or molecule depending on structure"
+      ]
+    },
+    {
+      "name": "StatusBadge",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/StatusBadge.jsx",
+      "category": "shared",
+      "exports": ["default"],
+      "atomic_level": "atom",
+      "props": {
+        "status": { "type": "string", "values": ["success", "warning", "error", "info"] },
+        "label": { "type": "string" }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 1,
+      "lines_of_code": 18,
+      "has_variants": false,
+      "variant_count": 4,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Pure atom - no dependencies, single responsibility",
+        "4 status variants - good for gallery story",
+        "Priority: CRITICAL - foundation for other components"
+      ]
+    },
+    {
+      "name": "Header",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Header.jsx",
+      "category": "shared",
+      "exports": ["default"],
+      "atomic_level": "molecule",
+      "props": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string", "optional": true }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 2,
+      "lines_of_code": 24,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Simple composition - no internal deps",
+        "Used in dashboard layout",
+        "Early migration candidate"
+      ]
+    },
+    {
+      "name": "Chart",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/shared/Chart.jsx",
+      "category": "shared",
+      "exports": ["default"],
+      "atomic_level": "organism",
+      "props": {
+        "data": { "type": "array" },
+        "title": { "type": "string", "optional": true },
+        "xKey": { "type": "string" },
+        "yKey": { "type": "string" }
+      },
+      "internal_dependencies": 0,
+      "external_dependencies": [
+        "react",
+        "recharts (if used)"
+      ],
+      "complexity_score": 4,
+      "lines_of_code": 68,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Data visualization component",
+        "May have external charting library dependency",
+        "Higher complexity - interaction testing needed"
+      ]
+    },
+    {
+      "name": "HealthScore",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/HealthScore.jsx",
+      "category": "ui",
+      "exports": ["default"],
+      "atomic_level": "organism",
+      "props": {
+        "score": { "type": "number", "min": 0, "max": 100 },
+        "breakdown": { "type": "object", "optional": true }
+      },
+      "internal_dependencies": [
+        "Card",
+        "Chart"
+      ],
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 4,
+      "lines_of_code": 56,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Depends on Card and Chart",
+        "Composite component - medium complexity",
+        "Needs Card and Chart migrated first"
+      ]
+    },
+    {
+      "name": "DomainCard",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/DomainCard.jsx",
+      "category": "ui",
+      "exports": ["default"],
+      "atomic_level": "organism",
+      "props": {
+        "domain": { "type": "object" },
+        "onClick": { "type": "function", "optional": true }
+      },
+      "internal_dependencies": [
+        "Card",
+        "StatusBadge"
+      ],
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 3,
+      "lines_of_code": 42,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Depends on Card and StatusBadge",
+        "Used in domain listing - medium complexity",
+        "Needs Card and StatusBadge migrated first"
+      ]
+    },
+    {
+      "name": "TechDebtList",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/TechDebtList.jsx",
+      "category": "ui",
+      "exports": ["default"],
+      "atomic_level": "organism",
+      "props": {
+        "items": { "type": "array" },
+        "onDismiss": { "type": "function", "optional": true }
+      },
+      "internal_dependencies": [
+        "Card",
+        "StatusBadge"
+      ],
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 3,
+      "lines_of_code": 48,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Depends on Card and StatusBadge",
+        "List component - medium complexity",
+        "Needs Card and StatusBadge migrated first"
+      ]
+    },
+    {
+      "name": "AutoFixLog",
+      "file_path": ".aios-core/scripts/diagnostics/health-dashboard/src/components/AutoFixLog.jsx",
+      "category": "ui",
+      "exports": ["default"],
+      "atomic_level": "organism",
+      "props": {
+        "logs": { "type": "array" },
+        "status": { "type": "string" }
+      },
+      "internal_dependencies": [
+        "Card"
+      ],
+      "external_dependencies": [
+        "react"
+      ],
+      "complexity_score": 3,
+      "lines_of_code": 44,
+      "has_variants": false,
+      "variant_count": 0,
+      "has_story": false,
+      "has_tests": false,
+      "migration_notes": [
+        "Depends on Card component",
+        "Log viewer component - medium complexity",
+        "Needs Card migrated first"
+      ]
+    }
+  ],
+  "categories": {
+    "pages": {
+      "count": 1,
+      "components": ["Home"]
+    },
+    "layouts": {
+      "count": 1,
+      "components": ["RootLayout"]
+    },
+    "ui": {
+      "count": 5,
+      "components": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"]
+    },
+    "shared": {
+      "count": 4,
+      "components": ["Card", "StatusBadge", "Header", "Chart"]
+    }
+  },
+  "atomic_distribution": {
+    "atom": 1,
+    "molecule": 4,
+    "organism": 5,
+    "template": 1,
+    "page": 1
+  },
+  "migration_phases": [
+    {
+      "phase": 1,
+      "name": "Foundation & Atoms",
+      "priority": "CRITICAL",
+      "components": ["StatusBadge"],
+      "rationale": "Zero dependencies - foundation for other components",
+      "estimated_effort": "30 mins"
+    },
+    {
+      "phase": 2,
+      "name": "Base Molecules",
+      "priority": "HIGH",
+      "components": ["Card", "Header", "Chart"],
+      "rationale": "Low complexity, no internal component deps - foundational",
+      "depended_by": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"],
+      "estimated_effort": "2 hours"
+    },
+    {
+      "phase": 3,
+      "name": "Dashboard UI Organisms",
+      "priority": "HIGH",
+      "components": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"],
+      "rationale": "Composite components - all depend on Phase 2 foundation",
+      "dependencies": ["Card", "StatusBadge", "Chart"],
+      "estimated_effort": "3 hours"
+    },
+    {
+      "phase": 4,
+      "name": "Layout & Pages",
+      "priority": "MEDIUM",
+      "components": ["RootLayout", "Home"],
+      "rationale": "Page and template level - can be done in parallel or last",
+      "notes": "Home is large (718 LOC) - candidate for later decomposition",
+      "estimated_effort": "2 hours"
+    }
+  ],
+  "dependency_graph": {
+    "StatusBadge": {
+      "depends_on": [],
+      "depended_by": ["IssuesList", "DomainCard", "TechDebtList"]
+    },
+    "Card": {
+      "depends_on": [],
+      "depended_by": ["IssuesList", "HealthScore", "DomainCard", "TechDebtList", "AutoFixLog"]
+    },
+    "Header": {
+      "depends_on": [],
+      "depended_by": []
+    },
+    "Chart": {
+      "depends_on": [],
+      "depended_by": ["HealthScore"]
+    },
+    "IssuesList": {
+      "depends_on": ["Card", "StatusBadge"],
+      "depended_by": []
+    },
+    "HealthScore": {
+      "depends_on": ["Card", "Chart"],
+      "depended_by": []
+    },
+    "DomainCard": {
+      "depends_on": ["Card", "StatusBadge"],
+      "depended_by": []
+    },
+    "TechDebtList": {
+      "depends_on": ["Card", "StatusBadge"],
+      "depended_by": []
+    },
+    "AutoFixLog": {
+      "depends_on": ["Card"],
+      "depended_by": []
+    },
+    "RootLayout": {
+      "depends_on": [],
+      "depended_by": ["Home"]
+    },
+    "Home": {
+      "depends_on": ["RootLayout"],
+      "depended_by": []
+    }
+  },
+  "summary": {
+    "total_components": 11,
+    "total_with_stories": 0,
+    "migration_gap": 11,
+    "coverage": "0%",
+    "estimated_total_effort": "7.5 hours",
+    "recommendation": "Start with Phase 1 (atoms), then Phase 2 (foundation molecules), then Phase 3 (UI organisms). Phase 4 (Home component) should be refactored into smaller pieces before writing stories."
+  }
+}
